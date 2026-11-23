@@ -13,7 +13,7 @@ import {
 import { COACHING_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
   CRISIS_RESPONSE_MESSAGE,
-  detectCrisisSignal,
+  checkCrisisRisk,
 } from "@/lib/ai/safety";
 import { checkAndReserveAiUsage, recordAiUsage } from "@/lib/ai/usage";
 import type { ChatMessage, ConversationSummary } from "@/types";
@@ -186,8 +186,8 @@ export async function POST(request: Request) {
       createdAt: now,
     });
 
-    // 危機介入チェック（最優先）
-    if (detectCrisisSignal(parsed.data.message)) {
+    // 危機介入二重チェック（最優先）
+    if (await checkCrisisRisk(parsed.data.message)) {
       const safetyNow = Timestamp.now();
       const safetyMsgRef = await convRef.collection("messages").add({
         role: "safety",

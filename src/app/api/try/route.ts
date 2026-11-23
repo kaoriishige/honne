@@ -9,7 +9,7 @@ import {
 import { TRIAL_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import {
   CRISIS_RESPONSE_MESSAGE,
-  detectCrisisSignal,
+  checkCrisisRisk,
 } from "@/lib/ai/safety";
 import { checkTrialRateLimit } from "@/lib/security/rate-limit";
 
@@ -50,8 +50,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // 深刻な自傷・自殺シグナルの検知時はOpenAIを呼ばず安全案内を返す（永続保存なし）
-    if (detectCrisisSignal(parsed.data.content)) {
+    // 深刻な自傷・自殺シグナルの二重検知時は通常コーチングを止め安全案内を返す（永続保存なし）
+    if (await checkCrisisRisk(parsed.data.content)) {
       const res = NextResponse.json({
         reply: CRISIS_RESPONSE_MESSAGE,
         isSafetyResponse: true,

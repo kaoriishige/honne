@@ -12,6 +12,7 @@ import {
   isOpenAIConfigured,
 } from "@/lib/ai/client";
 import { MONTHLY_REPORT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { normalizeMonthlyReport } from "@/lib/ai/normalize";
 import { recordAiUsage } from "@/lib/ai/usage";
 import type { MonthlyReportData, MonthlyReportItem } from "@/types";
 
@@ -207,7 +208,13 @@ export async function POST(request: Request) {
     });
 
     const rawJson = completion.choices[0]?.message?.content?.trim() || "{}";
-    const reportData = JSON.parse(rawJson) as MonthlyReportData;
+    let rawParsed: unknown = {};
+    try {
+      rawParsed = JSON.parse(rawJson);
+    } catch {
+      rawParsed = {};
+    }
+    const reportData = normalizeMonthlyReport(rawParsed);
 
     const now = Timestamp.now();
     await getAdminDb()

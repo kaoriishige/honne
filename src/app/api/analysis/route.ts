@@ -11,6 +11,7 @@ import {
   isOpenAIConfigured,
 } from "@/lib/ai/client";
 import { buildAnalysisSystemPrompt } from "@/lib/ai/prompts";
+import { normalizeAnalysisResult } from "@/lib/ai/normalize";
 import { checkAndReserveAiUsage, recordAiUsage } from "@/lib/ai/usage";
 import type { AnalysisItem, AnalysisResult } from "@/types";
 
@@ -173,7 +174,13 @@ export async function POST(request: Request) {
     });
 
     const rawJson = completion.choices[0]?.message?.content?.trim() || "{}";
-    const parsedResult = JSON.parse(rawJson) as AnalysisResult;
+    let rawParsed: unknown = {};
+    try {
+      rawParsed = JSON.parse(rawJson);
+    } catch {
+      rawParsed = {};
+    }
+    const parsedResult = normalizeAnalysisResult(rawParsed);
 
     const now = Timestamp.now();
     const docRef = await getAdminDb()
