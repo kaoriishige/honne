@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // デフォルトは全拒否
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ユーザー自身のプロフィール参照のみ許可
+    // プラン・課金状態・暗号化データの書き込みはサーバー（Firebase Admin SDK）のみ実行可能
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+
+      // サブコレクション（entries, conversations, analyses, reports, usage, payments）
+      // 本音データ等はサーバーAPIで暗号化・復号・権限検証を行うためクライアント直接操作は禁止
+      match /{subcollection}/{docId=**} {
+        allow read: if false;
+        allow write: if false;
+      }
+    }
+  }
+}
