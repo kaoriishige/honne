@@ -84,9 +84,16 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="text-base font-medium tracking-[0.12em] text-slate-100"
+            className="flex items-center gap-2.5 text-base font-medium tracking-[0.12em] text-slate-100"
           >
-            本当の自分
+            <Image
+              src="/images/app-icon.jpg"
+              alt="ほんね。"
+              width={28}
+              height={28}
+              className="rounded-lg"
+            />
+            <span>ほんね。</span>
           </Link>
           <div className="flex items-center gap-3 sm:gap-5">
             <Link
@@ -549,7 +556,7 @@ export default function LandingPage() {
       {/* フッター */}
       <footer className="bg-[#090F1E] text-slate-400 border-t border-white/10 py-10 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p className="tracking-wider">© {new Date().getFullYear()} 本当の自分</p>
+          <p className="tracking-wider">© {new Date().getFullYear()} ほんね。</p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="/try" className="hover:text-slate-200 transition-colors">
               無料体験

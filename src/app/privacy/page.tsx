@@ -19,7 +19,7 @@ export default function PrivacyPage() {
         <section className="space-y-2 text-sm text-slate-700 leading-relaxed">
           <h2 className="text-base font-semibold text-slate-900">1. 基本方針</h2>
           <p>
-            「本当の自分」（以下「本サービス」）は、利用者が誰にも見せない本音や感情を安心して記録できる個人専用サービスです。利用者のプライバシー保護を最優先とし、個人情報および記録データを厳格に取り扱います。
+            「ほんね。」（以下「本サービス」）は、利用者が誰にも見せない本音や感情を安心して記録できる個人専用サービスです。利用者のプライバシー保護を最優先とし、個人情報および記録データを厳格に取り扱います。
           </p>
         </section>
 

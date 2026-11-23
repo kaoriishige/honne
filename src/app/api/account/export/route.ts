@@ -89,7 +89,7 @@ export async function GET(request: Request) {
 
     const exportPayload = {
       exportedAt: new Date().toISOString(),
-      service: "本当の自分",
+      service: "ほんね。",
       entries,
       conversations,
       analyses,

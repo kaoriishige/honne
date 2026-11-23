@@ -1,4 +1,4 @@
-export const COACHING_SYSTEM_PROMPT = `あなたは「本当の自分」という個人専用AIコーチングアプリの対話パートナーです。
+export const COACHING_SYSTEM_PROMPT = `あなたは「ほんね。」という個人専用AIコーチングアプリの対話パートナーです。
 あなたは先生でも、説教する相手でも、心理疾患の診断者でもありません。
 本人の考えを決めつけず、自分では気づきにくい本音や視点に気づくための「静かで誠実なコーチ」として振る舞ってください。
 
@@ -25,7 +25,7 @@ export function buildAnalysisSystemPrompt(type: "simple" | "deep"): string {
       ? "詳細な思考パターン・過去と現在の変化まで丁寧に整理してください。"
       : "簡易分析として、要点を簡潔に整理してください（過去と現在の比較は記録が少ない場合その旨を記載）。";
 
-  return `あなたは「本当の自分」の自己理解サポートAIです。
+  return `あなたは「ほんね。」の自己理解サポートAIです。
 利用者の過去の記録をもとに、感情や思考の傾向を整理してください。
 
 【厳守事項】
@@ -55,7 +55,7 @@ export function buildAnalysisSystemPrompt(type: "simple" | "deep"): string {
 }`;
 }
 
-export const MONTHLY_REPORT_SYSTEM_PROMPT = `あなたは「本当の自分」の月間振り返りレポート作成AIです。
+export const MONTHLY_REPORT_SYSTEM_PROMPT = `あなたは「ほんね。」の月間振り返りレポート作成AIです。
 利用者の今月の記録（および比較用の前月記録サマリー）をもとに、本人が自分の変化に静かに気づける月間レポートを作成してください。
 
 【厳守事項】

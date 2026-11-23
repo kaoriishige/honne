@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { sendPasswordResetEmail } from "firebase/auth";
 import {
@@ -39,8 +40,18 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4 py-12">
       <div className="max-w-md w-full mx-auto">
         <div className="text-center mb-8">
-          <Link href="/" className="text-xl font-semibold text-slate-900">
-            本当の自分
+          <Link
+            href="/"
+            className="inline-flex flex-col items-center gap-2.5 text-xl font-semibold text-slate-900"
+          >
+            <Image
+              src="/images/app-icon.jpg"
+              alt="ほんね。"
+              width={48}
+              height={48}
+              className="rounded-2xl shadow-xs"
+            />
+            <span>ほんね。</span>
           </Link>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -85,9 +86,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link
             href="/app"
-            className="text-base font-semibold tracking-tight text-slate-900"
+            className="flex items-center gap-2 text-base font-semibold tracking-tight text-slate-900"
           >
-            本当の自分
+            <Image
+              src="/images/app-icon.jpg"
+              alt="ほんね。"
+              width={26}
+              height={26}
+              className="rounded-md"
+            />
+            <span>ほんね。</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

@@ -1,5 +1,5 @@
 /**
- * Stripe に「本当の自分 プレミアムプラン（月額480円・JPY）」の Product と Price を作成する補助スクリプト
+ * Stripe に「ほんね。 プレミアムプラン（月額480円・JPY）」の Product と Price を作成する補助スクリプト
  *
  * 使い方（PowerShell）:
  *   $env:STRIPE_SECRET_KEY="sk_test_..." # 本番時は sk_live_...
@@ -19,7 +19,7 @@ const stripe = new Stripe(secretKey);
 
 async function run() {
   const product = await stripe.products.create({
-    name: "本当の自分 プレミアムプラン",
+    name: "ほんね。 プレミアムプラン",
     description:
       "AIとの深掘り対話（月150回）・詳細感情分析・月間レポート・過去と現在の比較",
   });

@@ -11,7 +11,7 @@ const notoSansJp = Noto_Sans_JP({
   display: "swap",
 });
 
-const SITE_TITLE = "本当の自分｜誰にも見せない本音と向き合うAI";
+const SITE_TITLE = "ほんね。｜誰にも見せない本音と向き合うAI";
 const SITE_DESCRIPTION =
   "誰にも話せない本音や感情を、自分だけの空間でAIと一緒に見つめてみませんか。自分の気持ちを整理し、少しずつ本当の自分を理解していくためのサービスです。";
 
@@ -21,13 +21,13 @@ export const metadata: Metadata = {
   ),
   title: {
     default: SITE_TITLE,
-    template: "%s | 本当の自分",
+    template: "%s | ほんね。",
   },
   description: SITE_DESCRIPTION,
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    siteName: "本当の自分",
+    siteName: "ほんね。",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },

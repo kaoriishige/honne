@@ -19,7 +19,7 @@ export default function TermsPage() {
         <section className="space-y-2 text-sm text-slate-700 leading-relaxed">
           <h2 className="text-base font-semibold text-slate-900">1. 本サービスの目的</h2>
           <p>
-            「本当の自分」（以下「本サービス」）は、利用者が自身の本音や感情を記録し、AIとの対話を通じて自己理解を深めるための個人向けWebサービスです。
+            「ほんね。」（以下「本サービス」）は、利用者が自身の本音や感情を記録し、AIとの対話を通じて自己理解を深めるための個人向けWebサービスです。
           </p>
         </section>
 
