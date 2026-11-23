@@ -9,6 +9,7 @@ import {
   getFirebaseAuth,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -125,6 +126,18 @@ export default function LoginPage() {
               {submitting ? "ログイン中..." : "ログインする"}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span>または</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <GoogleAuthButton
+            mode="login"
+            disabled={submitting}
+            onError={setError}
+          />
 
           <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-600 space-y-2">
             <p>

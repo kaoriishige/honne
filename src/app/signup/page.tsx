@@ -12,6 +12,7 @@ import {
   getFirebaseAuth,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 function mapFirebaseAuthError(code: string): string {
   switch (code) {
@@ -203,7 +204,22 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* 将来Googleログインを追加する場合はここにプロバイダボタンを配置 */}
+          <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span>または</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <GoogleAuthButton
+            mode="signup"
+            disabled={submitting}
+            onBeforeAuth={() =>
+              agreed
+                ? null
+                : "Google 登録の前に、上の「利用規約・プライバシーポリシーへの同意」にチェックを入れてください。"
+            }
+            onError={setError}
+          />
 
           <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-600">
             すでにアカウントをお持ちの方は{" "}

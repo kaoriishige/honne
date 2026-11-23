@@ -20,6 +20,9 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, profile, usage, logout } = useAuth();
   const planConfig = getPlanConfig(profile?.plan);
+  const hasPasswordProvider = Boolean(
+    user?.providerData?.some((p) => p.providerId === "password")
+  );
 
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
@@ -209,88 +212,102 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {/* メールアドレス変更 */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
-        <h2 className="text-base font-semibold text-slate-900">
-          メールアドレス変更
-        </h2>
-        {emailMsg && (
-          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-            {emailMsg}
+      {/* メールアドレス変更・パスワード変更（メール登録ユーザーのみ） */}
+      {!hasPasswordProvider ? (
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-1.5">
+          <h2 className="text-base font-semibold text-slate-900">
+            ログイン方法
+          </h2>
+          <p className="text-xs text-slate-600">
+            Google アカウントでログインしています。メールアドレスやパスワードの変更は Google アカウント設定から行えます。
           </p>
-        )}
-        {emailErr && (
-          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-            {emailErr}
-          </p>
-        )}
-        <form onSubmit={handleChangeEmail} className="space-y-3">
-          <input
-            type="email"
-            required
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            placeholder="新しいメールアドレス"
-            className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
-          />
-          <input
-            type="password"
-            required
-            value={emailPassword}
-            onChange={(e) => setEmailPassword(e.target.value)}
-            placeholder="確認のため現在のパスワードを入力"
-            className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            className="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-xl text-xs font-medium"
-          >
-            変更確認メールを送信
-          </button>
-        </form>
-      </section>
+        </section>
+      ) : (
+        <>
+          {/* メールアドレス変更 */}
+          <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
+            <h2 className="text-base font-semibold text-slate-900">
+              メールアドレス変更
+            </h2>
+            {emailMsg && (
+              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                {emailMsg}
+              </p>
+            )}
+            {emailErr && (
+              <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                {emailErr}
+              </p>
+            )}
+            <form onSubmit={handleChangeEmail} className="space-y-3">
+              <input
+                type="email"
+                required
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="新しいメールアドレス"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
+              />
+              <input
+                type="password"
+                required
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="確認のため現在のパスワードを入力"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
+              />
+              <button
+                type="submit"
+                className="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-xl text-xs font-medium"
+              >
+                変更確認メールを送信
+              </button>
+            </form>
+          </section>
 
-      {/* パスワード変更 */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
-        <h2 className="text-base font-semibold text-slate-900">
-          パスワード変更
-        </h2>
-        {pwMsg && (
-          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-            {pwMsg}
-          </p>
-        )}
-        {pwErr && (
-          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-            {pwErr}
-          </p>
-        )}
-        <form onSubmit={handleChangePassword} className="space-y-3">
-          <input
-            type="password"
-            required
-            value={currentPw}
-            onChange={(e) => setCurrentPw(e.target.value)}
-            placeholder="現在のパスワード"
-            className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
-          />
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={newPw}
-            onChange={(e) => setNewPw(e.target.value)}
-            placeholder="新しいパスワード（8文字以上）"
-            className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            className="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-xl text-xs font-medium"
-          >
-            パスワードを変更する
-          </button>
-        </form>
-      </section>
+          {/* パスワード変更 */}
+          <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
+            <h2 className="text-base font-semibold text-slate-900">
+              パスワード変更
+            </h2>
+            {pwMsg && (
+              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                {pwMsg}
+              </p>
+            )}
+            {pwErr && (
+              <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                {pwErr}
+              </p>
+            )}
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <input
+                type="password"
+                required
+                value={currentPw}
+                onChange={(e) => setCurrentPw(e.target.value)}
+                placeholder="現在のパスワード"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
+              />
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                placeholder="新しいパスワード（8文字以上）"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
+              />
+              <button
+                type="submit"
+                className="bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-xl text-xs font-medium"
+              >
+                パスワードを変更する
+              </button>
+            </form>
+          </section>
+        </>
+      )}
 
       {/* データ管理 */}
       <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
