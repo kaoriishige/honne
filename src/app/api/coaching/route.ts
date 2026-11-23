@@ -11,6 +11,7 @@ import {
   isOpenAIConfigured,
 } from "@/lib/ai/client";
 import { COACHING_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { buildPersonalAiContext } from "@/lib/ai/context";
 import {
   CRISIS_RESPONSE_MESSAGE,
   checkCrisisRisk,
@@ -242,13 +243,19 @@ export async function POST(request: Request) {
       })
       .filter((m) => m.content.length > 0);
 
+    // 本人の過去記録・最新分析・訂正メモから必要最小限のパーソナルコンテキストを構築
+    const personalContext = await buildPersonalAiContext(user.uid);
+    const systemPrompt = personalContext
+      ? `${COACHING_SYSTEM_PROMPT}\n\n【この利用者本人の過去コンテキスト（参考情報・他者には一切非公開）】\n${personalContext}`
+      : COACHING_SYSTEM_PROMPT;
+
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
       model: getOpenAIModel(),
       temperature: 0.7,
       max_tokens: 450,
       messages: [
-        { role: "system", content: COACHING_SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...historyMessages,
       ],
     });

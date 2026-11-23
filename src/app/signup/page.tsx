@@ -102,9 +102,18 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">
-          <h1 className="text-lg font-semibold text-slate-900 mb-6">
+          <h1 className="text-lg font-semibold text-slate-900 mb-4">
             新規会員登録
           </h1>
+
+          <div className="mb-5 rounded-xl bg-slate-50 border border-slate-200/90 px-4 py-3 text-xs text-slate-600 leading-relaxed space-y-1">
+            <p className="font-medium text-slate-800">
+              あなたの本音は、他人のためのAIモデルの再学習には一切使いません。
+            </p>
+            <p>
+              記録や対話は暗号化して保存され、あなた自身の振り返りとAIとの対話のためだけに使われます。
+            </p>
+          </div>
 
           {error && (
             <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-xs text-rose-800">
