@@ -87,10 +87,10 @@ export default function LandingPage() {
             className="flex items-center gap-2.5 text-base font-medium tracking-[0.12em] text-slate-100"
           >
             <Image
-              src="/images/app-icon.jpg"
+              src="/images/lp-icon.jpg"
               alt="ほんね。"
-              width={28}
-              height={28}
+              width={32}
+              height={32}
               className="rounded-lg"
             />
             <span>ほんね。</span>
