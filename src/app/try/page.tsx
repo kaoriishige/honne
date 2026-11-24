@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { TRIAL_LIMITS } from "@/config/plans";
 
 interface TrialExchange {
@@ -19,6 +25,17 @@ export default function FreeTrialPage() {
   const [error, setError] = useState<string | null>(null);
   const [exchanges, setExchanges] = useState<TrialExchange[]>([]);
 
+  const latestReplyRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (exchanges.length > 0) {
+      latestReplyRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [exchanges]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -29,7 +46,9 @@ export default function FreeTrialPage() {
       return;
     }
     if (!agreed) {
-      setError("AIサービスへの送信についての説明をご確認のうえ、チェックを入れてください。");
+      setError(
+        "下の「AIへ送信することに同意する」にチェックを入れてから送信してください。"
+      );
       return;
     }
 
@@ -61,7 +80,9 @@ export default function FreeTrialPage() {
         },
       ]);
       setRemaining(
-        typeof data.remaining === "number" ? data.remaining : Math.max(0, remaining - 1)
+        typeof data.remaining === "number"
+          ? data.remaining
+          : Math.max(0, remaining - 1)
       );
       setContent("");
     } catch (err) {
@@ -74,9 +95,9 @@ export default function FreeTrialPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10 sm:py-14">
+    <div className="min-h-screen bg-slate-50 px-4 pt-12 pb-16 sm:py-14">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-2">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900"
@@ -103,7 +124,11 @@ export default function FreeTrialPage() {
           {exchanges.length > 0 && (
             <div className="space-y-4 pt-2">
               {exchanges.map((ex, idx) => (
-                <div key={idx} className="space-y-2.5">
+                <div
+                  key={idx}
+                  ref={idx === exchanges.length - 1 ? latestReplyRef : null}
+                  className="space-y-2.5"
+                >
                   <div className="bg-slate-100 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-slate-800 whitespace-pre-wrap ml-6">
                     {ex.userText}
                   </div>
@@ -111,14 +136,18 @@ export default function FreeTrialPage() {
                     className={`rounded-2xl rounded-tl-sm px-4 py-3.5 text-sm whitespace-pre-wrap mr-6 leading-relaxed border ${
                       ex.isSafetyResponse
                         ? "bg-amber-50 border-amber-300 text-amber-950"
-                        : "bg-white border-slate-200 text-slate-800"
+                        : "bg-indigo-50/40 border-indigo-200/80 text-slate-900"
                     }`}
                   >
-                    {ex.isSafetyResponse && (
+                    {ex.isSafetyResponse ? (
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-900 mb-2">
                         <AlertTriangle className="w-4 h-4" />
                         <span>大切なご案内</span>
                       </div>
+                    ) : (
+                      <p className="text-[11px] font-medium text-indigo-900/70 mb-1.5">
+                        ほんね。AI からの問いかけ
+                      </p>
                     )}
                     {ex.aiReply}
                   </div>
@@ -133,37 +162,49 @@ export default function FreeTrialPage() {
                 <textarea
                   rows={5}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (error) setError(null);
+                  }}
                   maxLength={TRIAL_LIMITS.maxChars}
                   placeholder="きれいな言葉にする必要はありません。今の気持ちをそのまま書いてください。"
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/40 p-4 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-900 resize-y leading-relaxed"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/40 p-4 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-900 resize-y leading-relaxed"
                 />
                 <div className="mt-1 flex justify-end text-xs text-slate-400">
                   {content.length} / {TRIAL_LIMITS.maxChars}
                 </div>
               </div>
 
-              {/* AI送信の事前明示 */}
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-2">
+              {/* AI送信の事前明示（カード全体をタップ可能にしてスマホで押しやすく） */}
+              <label className="block rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 cursor-pointer active:bg-slate-100 transition-colors">
                 <div className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
                   <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                   <p>
-                    入力内容はAIの応答を生成するため外部のAIサービス（OpenAI API）に送信されます。無料体験では記録はサーバーに永続保存されず、他の利用者に公開されることもありません。
+                    入力内容はAIの応答を生成するため外部のAIサービス（OpenAI
+                    API）に送信されます。無料体験では記録はサーバーに永続保存されず、他の利用者に公開されることもありません。
                   </p>
                 </div>
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-800 cursor-pointer pt-1">
+                <div className="flex items-center gap-3 pt-1">
                   <input
                     type="checkbox"
                     checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    className="rounded border-slate-300"
+                    onChange={(e) => {
+                      setAgreed(e.target.checked);
+                      if (error) setError(null);
+                    }}
+                    className="w-5 h-5 rounded border-slate-300 accent-slate-900 shrink-0"
                   />
-                  <span>上記を確認し、AIへ送信することに同意する</span>
-                </label>
-              </div>
+                  <span className="text-xs sm:text-sm font-medium text-slate-900">
+                    上記を確認し、AIへ送信することに同意する
+                  </span>
+                </div>
+              </label>
 
               {error && (
-                <div className="rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-xs text-rose-800">
+                <div
+                  role="alert"
+                  className="rounded-xl bg-rose-50 border border-rose-300 px-4 py-3 text-xs font-medium text-rose-800"
+                >
                   {error}
                 </div>
               )}
@@ -171,9 +212,12 @@ export default function FreeTrialPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 py-3 rounded-xl text-sm font-medium transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60 py-3.5 rounded-xl text-sm font-medium transition-colors"
               >
-                {submitting ? "AIが考えています..." : "AIに問いかけをもらう"}
+                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {submitting
+                  ? "AIが問いかけを考えています..."
+                  : "AIに問いかけをもらう"}
               </button>
             </form>
           ) : (
