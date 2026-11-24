@@ -67,19 +67,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const auth = getFirebaseAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        await fetchProfile();
-      } else {
-        setProfile(null);
-        setUsage(null);
-      }
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    try {
+      const auth = getFirebaseAuth();
+      unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        setUser(currentUser);
+        if (currentUser) {
+          await fetchProfile();
+        } else {
+          setProfile(null);
+          setUsage(null);
+        }
+        setLoading(false);
+      });
+    } catch {
+      // Safari のプライベートモードや WebView 等で Firebase 初期化に失敗しても
+      // 認証不要ページ（LP・無料体験など）の操作を絶対に止めない
+      const id = requestAnimationFrame(() => setLoading(false));
+      return () => cancelAnimationFrame(id);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [firebaseReady, fetchProfile]);
 
   const resendVerificationEmail = useCallback(async () => {

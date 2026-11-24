@@ -25,19 +25,19 @@ export default function FreeTrialPage() {
   const [error, setError] = useState<string | null>(null);
   const [exchanges, setExchanges] = useState<TrialExchange[]>([]);
 
-  const latestReplyRef = useRef<HTMLDivElement | null>(null);
+  const replySectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (exchanges.length > 0) {
-      latestReplyRef.current?.scrollIntoView({
+      replySectionRef.current?.scrollIntoView({
         behavior: "smooth",
-        block: "center",
+        block: "nearest",
       });
     }
   }, [exchanges]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitTrial = async () => {
+    if (submitting) return;
     setError(null);
 
     const trimmed = content.trim();
@@ -47,13 +47,16 @@ export default function FreeTrialPage() {
     }
     if (!agreed) {
       setError(
-        "下の「AIへ送信することに同意する」にチェックを入れてから送信してください。"
+        "上の「AIへ送信することに同意する」にチェックを入れてから送信してください。"
       );
       return;
     }
 
     setSubmitting(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
       const res = await fetch("/api/try", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,21 +64,43 @@ export default function FreeTrialPage() {
           content: trimmed,
           agreedToAiTransmission: true,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: {
+        reply?: string;
+        isSafetyResponse?: boolean;
+        remaining?: number;
+        error?: string;
+      } = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(
+          `サーバー応答の読み込みに失敗しました（ステータス: ${res.status}）。もう一度お試しください。`
+        );
+      }
+
       if (!res.ok) {
         if (typeof data.remaining === "number") {
           setRemaining(data.remaining);
         }
-        throw new Error(data.error || "応答の生成に失敗しました。");
+        throw new Error(
+          data.error || `応答の生成に失敗しました（ステータス: ${res.status}）。`
+        );
+      }
+
+      if (!data.reply) {
+        throw new Error("AIからの返答が空でした。もう一度お試しください。");
       }
 
       setExchanges((prev) => [
         ...prev,
         {
           userText: trimmed,
-          aiReply: data.reply,
+          aiReply: data.reply!,
           isSafetyResponse: Boolean(data.isSafetyResponse),
         },
       ]);
@@ -86,12 +111,25 @@ export default function FreeTrialPage() {
       );
       setContent("");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "通信エラーが発生しました。"
-      );
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError(
+          "通信がタイムアウトしました。電波状況をご確認のうえ、もう一度お試しください。"
+        );
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "通信エラーが発生しました。もう一度お試しください。"
+        );
+      }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submitTrial();
   };
 
   return (
@@ -120,15 +158,117 @@ export default function FreeTrialPage() {
             </p>
           </div>
 
-          {/* これまでのやりとり（セッション内のみ・非保存） */}
-          {exchanges.length > 0 && (
-            <div className="space-y-4 pt-2">
-              {exchanges.map((ex, idx) => (
+          {remaining > 0 ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <textarea
+                  rows={5}
+                  value={content}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  maxLength={TRIAL_LIMITS.maxChars}
+                  placeholder="きれいな言葉にする必要はありません。今の気持ちをそのまま書いてください。"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/40 p-4 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-900 resize-y leading-relaxed"
+                />
+                <div className="mt-1 flex justify-end text-xs text-slate-400">
+                  {content.length} / {TRIAL_LIMITS.maxChars}
+                </div>
+              </div>
+
+              {/* AI送信の事前明示（スマホで確実にタップ可能） */}
+              <div
+                onClick={() => {
+                  setAgreed((prev) => !prev);
+                  if (error) setError(null);
+                }}
+                role="checkbox"
+                aria-checked={agreed}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setAgreed((prev) => !prev);
+                  }
+                }}
+                className={`rounded-xl border p-4 space-y-2.5 cursor-pointer select-none transition-colors ${
+                  agreed
+                    ? "bg-slate-100/80 border-slate-900/40"
+                    : error && !agreed
+                    ? "bg-rose-50/60 border-rose-300"
+                    : "bg-slate-50 border-slate-200"
+                }`}
+              >
+                <div className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                  <p>
+                    入力内容はAIの応答を生成するため外部のAIサービス（OpenAI
+                    API）に送信されます。無料体験では記録はサーバーに永続保存されず、他の利用者に公開されることもありません。
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    readOnly
+                    className="w-5 h-5 rounded border-slate-300 accent-slate-900 shrink-0 pointer-events-none"
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-slate-900">
+                    上記を確認し、AIへ送信することに同意する
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60 py-3.5 rounded-xl text-sm font-medium transition-colors"
+              >
+                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {submitting
+                  ? "AIが問いかけを考えています..."
+                  : "AIに問いかけをもらう"}
+              </button>
+
+              {error && (
                 <div
-                  key={idx}
-                  ref={idx === exchanges.length - 1 ? latestReplyRef : null}
-                  className="space-y-2.5"
+                  role="alert"
+                  className="rounded-xl bg-rose-50 border border-rose-300 px-4 py-3 text-xs font-medium text-rose-800"
                 >
+                  {error}
+                </div>
+              )}
+            </form>
+          ) : (
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 text-center space-y-3">
+              <p className="text-sm font-medium text-slate-900">
+                無料体験の回数（{TRIAL_LIMITS.maxAttempts}回）を使い切りました。
+              </p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                無料アカウントを作成すると、本音の暗号化保存・過去記録の振り返り・継続的なAIコーチングや感情分析をご利用いただけます。
+              </p>
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 px-6 py-2.5 rounded-xl text-xs font-medium"
+              >
+                無料でアカウントを作成する
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
+
+          {/* AIからの返答エリア（送信ボタンのすぐ下に表示してスマホで見逃さない） */}
+          {exchanges.length > 0 && (
+            <div
+              ref={replySectionRef}
+              className="space-y-4 pt-4 border-t border-slate-200"
+            >
+              <p className="text-xs font-semibold text-slate-500">
+                AIとのやりとり（この画面を閉じると消去されます）
+              </p>
+              {exchanges.map((ex, idx) => (
+                <div key={idx} className="space-y-2.5">
                   <div className="bg-slate-100 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-slate-800 whitespace-pre-wrap ml-6">
                     {ex.userText}
                   </div>
@@ -153,88 +293,6 @@ export default function FreeTrialPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {remaining > 0 ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <textarea
-                  rows={5}
-                  value={content}
-                  onChange={(e) => {
-                    setContent(e.target.value);
-                    if (error) setError(null);
-                  }}
-                  maxLength={TRIAL_LIMITS.maxChars}
-                  placeholder="きれいな言葉にする必要はありません。今の気持ちをそのまま書いてください。"
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/40 p-4 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-900 resize-y leading-relaxed"
-                />
-                <div className="mt-1 flex justify-end text-xs text-slate-400">
-                  {content.length} / {TRIAL_LIMITS.maxChars}
-                </div>
-              </div>
-
-              {/* AI送信の事前明示（カード全体をタップ可能にしてスマホで押しやすく） */}
-              <label className="block rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 cursor-pointer active:bg-slate-100 transition-colors">
-                <div className="flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                  <p>
-                    入力内容はAIの応答を生成するため外部のAIサービス（OpenAI
-                    API）に送信されます。無料体験では記録はサーバーに永続保存されず、他の利用者に公開されることもありません。
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 pt-1">
-                  <input
-                    type="checkbox"
-                    checked={agreed}
-                    onChange={(e) => {
-                      setAgreed(e.target.checked);
-                      if (error) setError(null);
-                    }}
-                    className="w-5 h-5 rounded border-slate-300 accent-slate-900 shrink-0"
-                  />
-                  <span className="text-xs sm:text-sm font-medium text-slate-900">
-                    上記を確認し、AIへ送信することに同意する
-                  </span>
-                </div>
-              </label>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="rounded-xl bg-rose-50 border border-rose-300 px-4 py-3 text-xs font-medium text-rose-800"
-                >
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-60 py-3.5 rounded-xl text-sm font-medium transition-colors"
-              >
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {submitting
-                  ? "AIが問いかけを考えています..."
-                  : "AIに問いかけをもらう"}
-              </button>
-            </form>
-          ) : (
-            <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 text-center space-y-3">
-              <p className="text-sm font-medium text-slate-900">
-                無料体験の回数（{TRIAL_LIMITS.maxAttempts}回）を使い切りました。
-              </p>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                無料アカウントを作成すると、本音の暗号化保存・過去記録の振り返り・継続的なAIコーチングや感情分析をご利用いただけます。
-              </p>
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 px-6 py-2.5 rounded-xl text-xs font-medium"
-              >
-                無料でアカウントを作成する
-                <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
           )}
         </div>
